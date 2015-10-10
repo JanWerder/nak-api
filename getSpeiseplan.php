@@ -10,17 +10,12 @@ function getWeekDates($year, $week)
     return strtotime("{$year}-W{$week}-6");
 }
 
-
-$dom = new DomDocument;
-
 $url = "https://cis.nordakademie.de/service/tp-mensa/speiseplan.cmd";
 
 if(!empty($_GET["date"])){
-	$date = $_GET["date"]; //UNIX timestamp des Samstags der Woche
+	$date = $_GET["date"]; //UNIX timestamp des Samstags der Woche (s. ReadMe)
 	$url .= "?date=" . $date . "999&action=show";
-}
-
-if(!empty($_GET["year"])){
+}elseif(!empty($_GET["year"])){
 	$year = $_GET["year"];
 	if(!empty($_GET["week"])){
 		$week = $_GET["week"];
@@ -28,51 +23,50 @@ if(!empty($_GET["year"])){
 	}
 }
 
-$dom->loadHTMLFile($url);
+class SpeiseplanParser{
+	function __construct($url){
+		$this->dom = new DomDocument;
+		$this->dom->loadHTMLFile($url);
 
-$xpath = new DomXPath($dom);
+		$this->xpath = new DomXPath($this->dom);
 
-$descrNodes = $xpath->query("//div[contains(@class,'speiseplan-kurzbeschreibung')]");
-$priceNodes = $xpath->query("//div[contains(@class,'speiseplan-preis')]");
-$dateNodes = $xpath->query("//td[contains(@class,'speiseplan-head')]");
-
-if(null !== $descrNodes->item(0)){
-	$speiseplan = array();
-	$speiseplan["monday"] = array();
-	$speiseplan = getDay(0,"monday","meal1", $descrNodes, $priceNodes, $speiseplan);
-	$speiseplan = getDay(1,"monday","meal2", $descrNodes, $priceNodes, $speiseplan);
-
-	$speiseplan["tuesday"] = array();
-	$speiseplan = getDay(2,"tuesday","meal1", $descrNodes, $priceNodes, $speiseplan);
-	$speiseplan = getDay(3,"tuesday","meal2", $descrNodes, $priceNodes, $speiseplan);
-
-	$speiseplan["wednesday"] = array();
-	$speiseplan = getDay(4,"wednesday","meal1", $descrNodes, $priceNodes, $speiseplan);
-	$speiseplan = getDay(5,"wednesday","meal2", $descrNodes, $priceNodes, $speiseplan);
-
-	$speiseplan["thursday"] = array();
-	$speiseplan = getDay(6,"thursday","meal1", $descrNodes, $priceNodes, $speiseplan);
-	$speiseplan = getDay(7,"thursday","meal2", $descrNodes, $priceNodes, $speiseplan);
-
-	$speiseplan["friday"] = array();
-	$speiseplan = getDay(8,"friday","meal1", $descrNodes, $priceNodes, $speiseplan);
-	$speiseplan = getDay(9,"friday","meal2", $descrNodes, $priceNodes, $speiseplan);
-	
-
-	print_r(json_encode($speiseplan));
-}
-
-function getDay($index,$day,$meal, $descrNodes, $priceNodes, $speiseplan){
-	if (null !== $descrNodes->item($index)){
-		$speiseplan[$day][$meal] = array( "description" => trim($descrNodes->item($index)->nodeValue), "price" => trim($priceNodes->item($index)->nodeValue));
-	}else{
-		$speiseplan[$day][$meal] = array( "description" => null, "price" => null);
+		$this->descrNodes = $this->xpath->query("//div[contains(@class,'speiseplan-kurzbeschreibung')]");
+		$this->priceNodes = $this->xpath->query("//div[contains(@class,'speiseplan-preis')]");
+		$this->dateNodes = $this->xpath->query("//td[contains(@class,'speiseplan-head')]");
+		$this->speiseplan = array();
+		$this->days = array("monday", "tuesday", "wednesday", "thursday", "friday");
 	}
-	return $speiseplan;
-	
+
+	function parse(){
+
+		if(null !== $this->descrNodes->item(0)){
+
+			$domElementIndex = 0;
+			foreach($this->days as $day){
+				$speiseplan[$day] = array();
+				$this->getDay($domElementIndex,$day,"meal1");
+				$domElementIndex++;
+				$this->getDay($domElementIndex,$day,"meal2");
+				$domElementIndex++;
+			}
+			print_r(json_encode($this->speiseplan));
+		}
+
+	}
+
+	function getDay($index,$day,$meal){
+		if (null !== $this->descrNodes->item($index)){
+			$this->speiseplan[$day][$meal] = array( "description" => trim($this->descrNodes->item($index)->nodeValue), "price" => trim($this->priceNodes->item($index)->nodeValue));
+		}else{
+			$this->speiseplan[$day][$meal] = array( "description" => null, "price" => null);
+		}
+
+	}
+
 }
 
-
+$parser = new SpeiseplanParser($url);
+$parser->parse();
 
 ?>
 </body>
