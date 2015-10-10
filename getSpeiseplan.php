@@ -39,31 +39,37 @@ $dateNodes = $xpath->query("//td[contains(@class,'speiseplan-head')]");
 if(null !== $descrNodes->item(0)){
 	$speiseplan = array();
 	$speiseplan["monday"] = array();
-	$speiseplan["monday"]["date"] = substr(trim($dateNodes->item(0)->nodeValue),-6);
-	$speiseplan["monday"]["meal1"] = array( "description" => trim($descrNodes->item(0)->nodeValue), "price" => trim($priceNodes->item(0)->nodeValue));
-	$speiseplan["monday"]["meal2"] = array( "description" => trim($descrNodes->item(1)->nodeValue), "price" => trim($priceNodes->item(1)->nodeValue));
+	$speiseplan = getDay(0,"monday","meal1", $descrNodes, $priceNodes, $speiseplan);
+	$speiseplan = getDay(1,"monday","meal2", $descrNodes, $priceNodes, $speiseplan);
 
 	$speiseplan["tuesday"] = array();
-	$speiseplan["tuesday"]["date"] = substr(trim($dateNodes->item(1)->nodeValue),-6);
-	$speiseplan["tuesday"]["meal1"] = array( "description" => trim($descrNodes->item(2)->nodeValue), "price" => trim($priceNodes->item(2)->nodeValue));
-	$speiseplan["tuesday"]["meal2"] = array( "description" => trim($descrNodes->item(3)->nodeValue), "price" => trim($priceNodes->item(3)->nodeValue));
+	$speiseplan = getDay(2,"tuesday","meal1", $descrNodes, $priceNodes, $speiseplan);
+	$speiseplan = getDay(3,"tuesday","meal2", $descrNodes, $priceNodes, $speiseplan);
 
 	$speiseplan["wednesday"] = array();
-	$speiseplan["wednesday"]["date"] = substr(trim($dateNodes->item(2)->nodeValue),-6);
-	$speiseplan["wednesday"]["meal1"] = array( "description" => trim($descrNodes->item(4)->nodeValue), "price" => trim($priceNodes->item(4)->nodeValue));
-	$speiseplan["wednesday"]["meal2"] = array( "description" => trim($descrNodes->item(5)->nodeValue), "price" => trim($priceNodes->item(5)->nodeValue));
+	$speiseplan = getDay(4,"wednesday","meal1", $descrNodes, $priceNodes, $speiseplan);
+	$speiseplan = getDay(5,"wednesday","meal2", $descrNodes, $priceNodes, $speiseplan);
 
 	$speiseplan["thursday"] = array();
-	$speiseplan["thursday"]["date"] = substr(trim($dateNodes->item(3)->nodeValue),-6);
-	$speiseplan["thursday"]["meal1"] = array( "description" => trim($descrNodes->item(6)->nodeValue), "price" => trim($priceNodes->item(6)->nodeValue));
-	$speiseplan["thursday"]["meal2"] = array( "description" => trim($descrNodes->item(7)->nodeValue), "price" => trim($priceNodes->item(7)->nodeValue));
+	$speiseplan = getDay(6,"thursday","meal1", $descrNodes, $priceNodes, $speiseplan);
+	$speiseplan = getDay(7,"thursday","meal2", $descrNodes, $priceNodes, $speiseplan);
 
 	$speiseplan["friday"] = array();
-	$speiseplan["friday"]["date"] = substr(trim($dateNodes->item(4)->nodeValue),-6);
-	$speiseplan["friday"]["meal1"] = array( "description" => trim($descrNodes->item(8)->nodeValue), "price" => trim($priceNodes->item(8)->nodeValue));
-	$speiseplan["friday"]["meal2"] = array( "description" => trim($descrNodes->item(9)->nodeValue), "price" => trim($priceNodes->item(9)->nodeValue));
+	$speiseplan = getDay(8,"friday","meal1", $descrNodes, $priceNodes, $speiseplan);
+	$speiseplan = getDay(9,"friday","meal2", $descrNodes, $priceNodes, $speiseplan);
+	
 
 	print_r(json_encode($speiseplan));
+}
+
+function getDay($index,$day,$meal, $descrNodes, $priceNodes, $speiseplan){
+	if (null !== $descrNodes->item($index)){
+		$speiseplan[$day][$meal] = array( "description" => trim($descrNodes->item($index)->nodeValue), "price" => trim($priceNodes->item($index)->nodeValue));
+	}else{
+		$speiseplan[$day][$meal] = array( "description" => null, "price" => null);
+	}
+	return $speiseplan;
+	
 }
 
 
